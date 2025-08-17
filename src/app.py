@@ -2,8 +2,6 @@
 from pymongo import MongoClient
 import streamlit as st
 import pandas as pd
-import requests
-import plotly.express as px
 import plotly.graph_objects as go
 import os
 import glob
