@@ -1,5 +1,5 @@
 #importação das bibliotecas necessárias
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -12,8 +12,7 @@ st.title("Desafio de Estágio")
 
 #Importação do banco de dados baseado em mongoDB
 
-Mongo_URI = "mongodb://localhost:27017/"
-
+Mongo_URI = st.secrets['mongo']['uri']
 
 
 
@@ -76,18 +75,18 @@ df_monthly = df_filtragem.groupby(['Year-Month']).agg({
 
 #Geração dos gráficos
 if not df_monthly.empty:
-    deaths = go.Scatter(x = df_monthly['Year-Month'], y = df_monthly['deaths'],
-                       name = 'Mortes', mode = 'lines', line=dict(color='blue'))
+    cases = go.Scatter(x = df_monthly['Year-Month'], y = df_monthly['cases'],
+                       name = 'Casos', mode = 'lines', line=dict(color='blue'))
 
-    cases = go.Bar(x = df_monthly['Year-Month'], y = df_monthly['cases'],
-                    name = 'Casos', yaxis = 'y2', opacity = 0.6, marker=dict(color='red'))
+    deaths = go.Bar(x = df_monthly['Year-Month'], y = df_monthly['deaths'],
+                    name = 'Mortes', yaxis = 'y2', opacity = 0.6, marker=dict(color='red'))
 
     #configuração de um layout para o gráfico
     layout = go.Layout(
         title = 'Casos de COVID-19 nos Estados Unidos de 2020 à 2023',
         xaxis = dict(title = 'Mês'),
-        yaxis = dict(title ='Casos', range = [0, df_monthly['cases']]),
-        yaxis2 = dict(title = 'mortes', range = [0, df_monthly['deaths']], overlaying='y', side='right'),
+        yaxis = dict(title ='Casos', range = [0, df_monthly['cases'].max() * 1.1]),
+        yaxis2 = dict(title = 'mortes', range = [0, df_monthly['deaths'].max() * 1.1], overlaying='y', side='right'),
         legend = dict(x=0, y=1.1, orientation='h'),
         barmode = 'overlay',
     )
@@ -100,8 +99,8 @@ if not df_monthly.empty:
     if st.button("Armazenar os dados"):
         try:
             client = MongoClient(Mongo_URI)
-            db = client.get_database('casos_de_covid')
-            collection = db.get_collection('casos_e_mortes')
+            db = client.get_database('Casos_de_Covid')
+            collection = db.get_collection('Casos_e_mortes')
             # variáveis para extração do número de casos e mortes.
             total_de_casos = int(df_monthly['cases'].sum())
             total_de_mortes = int(df_monthly['deaths'].sum())
@@ -118,10 +117,10 @@ if not df_monthly.empty:
                 'Condado': selecaoCondado,
                 'Ano': int(selecaoAno)
             }):
-                st.info("Dados já armazanedos! Por favor, insira dados diferentes.")
+                st.warning ("Dados já armazanedos! Por favor, insira dados diferentes.")
             else:
                 collection.insert_one(data_to_insert)
-                st.success("Armazenado com sucesso!")
+                st.success ("Armazenado com sucesso!")
 
         except Exception as e:
             st.error(f"Falha ao inserir os dados ao banco: {e}")
