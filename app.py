@@ -4,7 +4,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import os
-import glob
+
 
 #títutlo da aplicação
 
@@ -20,22 +20,15 @@ Mongo_URI = "mongodb://localhost:27017/"
 #importação do diretório contendo a base de dados com validação e otimização
 @st.cache_data(show_spinner = "Carregando dados...")
 def load_data():
-    data_dir = os.path.join(os.path.dirname(__file__), 'base de dados')
-    all_files = glob.glob(os.path.join(data_dir, '*.csv'))
+    data_path = os.path.join(os.path.dirname(__file__), 'base de dados', 'dados_completos.parquet')
 
-    if not all_files:
+    if not os.path.exists(data_path):
         st.error("Nenhum arquivo encontrado no diretório 'base de dados'")
         st.stop()
 
 
-    df = pd.concat([pd.read_csv(f) for f in all_files], ignore_index=True)
+    df = pd.read_parquet(data_path)
 
-
-   #filtragem dos estados para seleção futura
-
-    df['date']=pd.to_datetime(df['date'])
-    df['year']=df['date'].dt.year
-    df['Year-Month']=df['date'].dt.strftime('%Y-%m').astype(str)
 
     return df
 
@@ -82,20 +75,19 @@ df_monthly = df_filtragem.groupby(['Year-Month']).agg({
 
 
 #Geração dos gráficos
-#Geração dos gráficos
 if not df_monthly.empty:
-    cases = go.Scatter(x = df_monthly['Year-Month'], y = df_monthly['cases'],
-                       name = 'deaths', mode = 'lines', line=dict(color='blue'))
+    deaths = go.Scatter(x = df_monthly['Year-Month'], y = df_monthly['deaths'],
+                       name = 'Mortes', mode = 'lines', line=dict(color='blue'))
 
-    deaths = go.Bar(x = df_monthly['Year-Month'], y = df_monthly['deaths'],
-                    name = 'cases', yaxis = 'y2', opacity = 0.6, marker=dict(color='red'))
+    cases = go.Bar(x = df_monthly['Year-Month'], y = df_monthly['cases'],
+                    name = 'Casos', yaxis = 'y2', opacity = 0.6, marker=dict(color='red'))
 
     #configuração de um layout para o gráfico
     layout = go.Layout(
         title = 'Casos de COVID-19 nos Estados Unidos de 2020 à 2023',
         xaxis = dict(title = 'Mês'),
-        yaxis = dict(title ='Casos', range = [0, df_monthly['cases'].max() * 1.1]),
-        yaxis2 = dict(title = 'mortes', range = [0, df_monthly['deaths'].max() * 1.1], overlaying='y', side='right'),
+        yaxis = dict(title ='Casos', range = [0, df_monthly['cases']]),
+        yaxis2 = dict(title = 'mortes', range = [0, df_monthly['deaths']], overlaying='y', side='right'),
         legend = dict(x=0, y=1.1, orientation='h'),
         barmode = 'overlay',
     )
