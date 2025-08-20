@@ -91,7 +91,7 @@ if not df_monthly.empty:
         barmode = 'overlay',
     )
 
-    #adição do gráfico à uma figura exibição com streamlit
+    #adição do gráfico à uma figura e exibição com streamlit
     fig = go.Figure(data=[cases, deaths], layout=layout)
     st.plotly_chart(fig)
 
