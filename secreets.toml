@@ -1,3 +1,0 @@
-[mongo]
-
-uri = "mongodb+srv://Tavares:<db_password>@casosdecovid.uoktzsn.mongodb.net/?retryWrites=true&w=majority&appName=CasosDeCovid"
