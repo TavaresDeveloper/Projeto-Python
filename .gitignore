@@ -1,4 +1,7 @@
    .venv/
 
-   .streamlit/
-   .toml
+secreets.toml
+
+.devcontainer
+
+base de dados
